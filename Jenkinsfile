@@ -14,7 +14,7 @@ pipeline {
         stage('archive artifact') {
             steps {
                archiveArtifacts artifacts: 'target/*.jar', followSymlinks: false
-               stash includes '*', name 'my jarfile'
+               stash includes: '*', name: 'my jarfile'
             }
         }
         stage('creating graph') {
