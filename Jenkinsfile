@@ -32,7 +32,7 @@ pipeline {
         }
         stage('push into dockerhub') {
             agent {label 'ec2a'}
-            enviroment {
+            environment {
                     SERVICE_CREDS= credentials('dockerhub')
             }
             steps {
