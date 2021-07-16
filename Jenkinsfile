@@ -44,7 +44,7 @@ pipeline {
                     SERVICE_CREDS= credentials('dockerhub')
             }
             steps {
-                    sh "docker push -u ${SERVICE_CREDS_USER} -p ${SERVICE_CREDS_PSW}"
+                    sh "docker push -u ${SERVICE_CREDS_USR} -p ${SERVICE_CREDS_PSW}"
                 }
         }        
     }
