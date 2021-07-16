@@ -11,21 +11,36 @@ pipeline {
                 sh 'mvn package'
             }
         }
-        stage('archive artifact') {
+        stage('archive artifact nd creating graph of reports') {
             steps {
                archiveArtifacts artifacts: 'target/*.jar', followSymlinks: false
-               stash includes: '/workspace/jenkinsfileseedjob/*', name: 'my jarfile'
+               junit 'target/surefire-reports/*.xml'
+               stash includes: '*', name: 'my jarfile'
+               stash includes: 'target/*', name: 'target'
                sh 'pwd'
                sh 'ls -l'
             }
         }
-        stage('creating graph') {
+        stage('creating custom workspace of target') {
+            agent { label 'ec2a'}
             steps {
-                junit 'target/surefire-reports/*.xml'
+               sh 'mkdir target'
             }
         }
+        stage('unstashing target folder in ec2a') {
+            agent { label 'ec2a'
+                customworkspace "/slave/workspace/target/"
+            }
+            steps {
+                unstash "target"
+            }
+
+        }
+
         stage('build image') {
-            agent {label 'ec2a'}
+            agent {label 'ec2a'
+                 customworkspace "/slave/workspace/"
+            }
             steps {
               unstash 'my jarfile'
               sh 'pwd'
