@@ -31,7 +31,7 @@ pipeline {
             agent { 
                 node { 
                 label 'ec2a'
-                customworkspace "/slave/workspace/target/"
+                customWorkspace "/slave/workspace/target/"
             }
             }
             steps {
@@ -44,7 +44,7 @@ pipeline {
             agent {
                 node {
                  label 'ec2a'
-                 customworkspace "/slave/workspace/"
+                 customWorkspace "/slave/workspace/"
             }
             }
             steps {
