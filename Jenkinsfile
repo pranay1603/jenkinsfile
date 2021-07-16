@@ -28,8 +28,11 @@ pipeline {
             }
         }
         stage('unstashing target folder in ec2a') {
-            agent { label 'ec2a'
+            agent { 
+                node { 
+                label 'ec2a'
                 customworkspace "/slave/workspace/target/"
+            }
             }
             steps {
                 unstash "target"
@@ -38,7 +41,9 @@ pipeline {
         }
 
         stage('build image') {
-            agent {label 'ec2a'
+            agent {
+                node {
+                 label 'ec2a'
                  customworkspace "/slave/workspace/"
             }
             steps {
