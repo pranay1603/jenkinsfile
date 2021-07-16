@@ -46,6 +46,7 @@ pipeline {
                  label 'ec2a'
                  customworkspace "/slave/workspace/"
             }
+            }
             steps {
               unstash 'my jarfile'
               sh 'pwd'
