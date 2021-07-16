@@ -21,29 +21,6 @@ pipeline {
                sh 'ls -l'
             }
         }
-        stage('creating custom workspace of target') {
-            agent { 
-                node { 
-                label 'ec2a'
-                customWorkspace "/slave/workspace/"
-            }
-            }
-            steps {
-               sh 'mkdir target'
-            }
-        }
-        stage('unstashing target folder in ec2a') {
-            agent { 
-                node { 
-                label 'ec2a'
-                customWorkspace "/slave/workspace/target/"
-            }
-            }
-            steps {
-                unstash "target"
-            }
-
-        }
 
         stage('build image') {
             agent {
@@ -54,6 +31,7 @@ pipeline {
             }
             steps {
               unstash 'my jarfile'
+              unstash "target"
               sh 'pwd'
               sh 'ls -l'
               sh "docker build -t pranay1603/japp:v2 ."
