@@ -14,7 +14,7 @@ pipeline {
         stage('archive artifact') {
             steps {
                archiveArtifacts artifacts: 'target/*.jar', followSymlinks: false
-               stash includes: '*', name: 'my jarfile'
+               stash includes: '/workspace/jenkinsfileseedjob/*', name: 'my jarfile'
                sh 'pwd'
                sh 'ls -l'
             }
@@ -28,6 +28,8 @@ pipeline {
             agent {label 'ec2a'}
             steps {
               unstash 'my jarfile'
+              sh 'pwd'
+              sh 'ls -l'
               sh "docker build -t pranay1603/japp:v2 ."
 
             }
