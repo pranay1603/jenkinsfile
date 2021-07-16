@@ -22,7 +22,12 @@ pipeline {
             }
         }
         stage('creating custom workspace of target') {
-            agent { label 'ec2a'}
+            agent { 
+                node { 
+                label 'ec2a'
+                customWorkspace "/slave/workspace/"
+            }
+            }
             steps {
                sh 'mkdir target'
             }
