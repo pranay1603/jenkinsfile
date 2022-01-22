@@ -1,10 +1,13 @@
 #!/usr/bin/bash
 
 #here we have created the script for non root user for setting up the environment
-<<COMMENT1
+
+##taking the root password from the user
+read -p "Enter your root password : " root
+
 ##Setting the tomcat9 server 
 
-echo "pranay" |sudo -S apt update 
+echo "$root" |sudo -S apt update 
 sudo apt-get install -y openjdk-8-jre tomcat9 openjdk-8-jdk maven
 
 # updating the java version 
@@ -182,8 +185,7 @@ sudo apt-get -y install --no-install-recommends openresty
 
 # Copying the web configurations:
 
-#1 change here
-sudo cp -a /home/pranay/repo/dev-env-setup/openresty/* /etc/openresty/
+sudo cp -a $dir/dev-env-setup/openresty/* /etc/openresty/
 
 if sudo systemctl status openresty &>/dev/null
 then
@@ -207,31 +209,31 @@ fi
 #Bundling-up everything
 
 #cloning the common repo from bitbucket
-###changes done here in path added manually after testing delete and add variable $dir
-cd /home/pranay/repo/;git clone https://pranay1603@bitbucket.org/senpiper/common.git
+
+cd $dir;git clone https://pranay1603@bitbucket.org/senpiper/common.git
 
 #building up the jar file 
-cd /home/pranay/repo/common/ ; mvn -T4C clean install 
+cd $dir/common/ ; mvn -T4C clean install 
 
 
 #now building the war file of core 
-cd /home/pranay/repo/core/ ; mvn -T4C clean install
+cd $dir/core/ ; mvn -T4C clean install
 
 #cloning the search repo from bitbicket
-cd /home/pranay/repo/ ; git clone https://pranay1603@bitbucket.org/senpiper/search.git
+cd $dir ; git clone https://pranay1603@bitbucket.org/senpiper/search.git
 
 #building the war file from search directory 
-cd /home/pranay/repo/search/search/ ; mvn -T4C clean install 
+cd $dir/search/search/ ; mvn -T4C clean install 
 
 #cloning the webclient repo from bitbucket
-cd /home/pranay/repo/ ;git clone https://pranay1603@bitbucket.org/senpiper/webclient.git
+cd $dir ;git clone https://pranay1603@bitbucket.org/senpiper/webclient.git
 
 ##switching to the latestProdBuild branch in webclient
-cd /home/pranay/repo/webclient/;git checkout latestProdBuild
+cd $dir/webclient/;git checkout latestProdBuild
 
 #copying the core and search war file into tomcat webapps directory 
 
-echo "pranay" |sudo -S cp /home/pranay/repo/core/target/core.war /home/pranay/repo/search/search/target/search.war /var/lib/tomcat9/webapps/
+echo "$root" |sudo -S cp $dir/core/target/core.war $dir/search/search/target/search.war /var/lib/tomcat9/webapps/
 
 #restarting the tomcat9 service 
 
@@ -246,26 +248,26 @@ fi
 #Creating the directory for frontend & copying the webclient data to html directory
 if ls /usr/share/nginx/html/excel/ &>/dev/null
 then
-  sudo  cp -r /home/pranay/repo/webclient/* /usr/share/nginx/html/
+  sudo  cp -r $dir/webclient/* /usr/share/nginx/html/
 else   
     sudo mkdir -p /usr/share/nginx/html/excel/
-    sudo cp -r /home/pranay/repo/webclient/* /usr/share/nginx/html/
+    sudo cp -r $dir/webclient/* /usr/share/nginx/html/
 fi
 
 
 #installing mkcert
-read -p "Enter your root password : " root
-echo "$root" |sudo -S apt install libnss3-tools -y;
-echo "$root" |sudo -S wget https://github.com/FiloSottile/mkcert/releases/download/v1.1.2/mkcert-v1.1.2-linux-amd64
-echo "$root" |sudo -S mv mkcert-v1.1.2-linux-amd64 mkcert
+
+echo "$root" |sudo -S apt install libnss3-tools -y
+wget https://github.com/FiloSottile/mkcert/releases/download/v1.1.2/mkcert-v1.1.2-linux-amd64
+mv mkcert-v1.1.2-linux-amd64 mkcert
 echo "$root" |sudo -S chmod +x mkcert
 echo "$root" |sudo -S cp mkcert /usr/local/bin/
-echo "$root" |sudo -S mkcert -install
-echo "$root" |sudo -S mkcert local.senpiper.com *.local.senpiper.com localhost 127.0.0.1 ::1		
+mkcert -install
+mkcert local.senpiper.com *.local.senpiper.com localhost 127.0.0.1 ::1		
 
 #switching to repo user to do entry into the /etc/host file
 
-echo "pranay" |sudo -S sed -i 's/\(^127.0.0.1.*\)/\1\tlocal.senpiper.com/g' /etc/hosts
+echo "$root" |sudo -S sed -i 's/\(^127.0.0.1.*\)/\1\tlocal.senpiper.com/g' /etc/hosts
 
 #copying the certificates into the openresty folder 
 sudo cp ./local.senpiper.com+4.pem /etc/openresty/ssl/fullchain.pem
@@ -291,10 +293,8 @@ else
    exit 
 fi  
 
-COMMENT1
 
 ## creating the company file to add into cassandra db
-##changes done for testing in paths 
 read -p "Enter the company name : " company
 
 read -p "Enter the subdomain of company : " subdomain
@@ -303,17 +303,17 @@ read -p "Enter the mobile no of company : " mobile
 
 read -p "Enter the mail id of company : " mail
 
-cp /home/pranay/repo/dev-env-setup/cassandra/queries /home/pranay/repo/$company.txt
+cp /home/pranay/repo/dev-env-setup/cassandra/queries $dir/$company.txt
 
-sed -i "s/Pawan/$company/g" /home/pranay/repo/$company.txt
+sed -i "s/Pawan/$company/g" $dir/$company.txt
 
-sed -i "s/pawan@senpiper.com/$mail/g" /home/pranay/repo/$company.txt
+sed -i "s/pawan@senpiper.com/$mail/g" $dir/$company.txt
 
-sed -i "s/8808808800/$mobile/g" /home/pranay/repo/$company.txt
+sed -i "s/8808808800/$mobile/g" $dir/$company.txt
 
-sed -i  "s/[S,s]etup/$subdomain/g" /home/pranay/repo/$company.txt
+sed -i  "s/[S,s]etup/$subdomain/g" $dir/$company.txt
 
 #Creating entry into the cassandra db
 
-cqlsh -k core -f /home/pranay/repo/$company.txt
+cqlsh -k core -f $dir/$company.txt
 
