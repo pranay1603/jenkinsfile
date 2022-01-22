@@ -38,7 +38,7 @@ then
      curl http://localhost:8080/
      echo "page is opening"
 else
-     sudo apt install curl
+     sudo apt install curl -y
      curl http://localhost:8080/
 fi
 
@@ -170,6 +170,7 @@ fi
 # building the openresty app gateway 
 
 # creating the apt repo for openresty app agteway 
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 97DB7443D5EDEB74
 
 sudo apt-get -y install --no-install-recommends  wget
 
