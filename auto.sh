@@ -1,14 +1,14 @@
 #!/usr/bin/bash
 
 #here we have created the script for non root user for setting up the environment
-
+<<COMMENT1
 ##Setting the tomcat9 server 
 
-sudo apt update 
+echo "pranay" |sudo -S apt update 
 sudo apt-get install -y openjdk-8-jre tomcat9 openjdk-8-jdk maven
 
 # updating the java version 
-update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-amd64 &> /dev/null
+sudo update-java-alternatives --set /usr/lib/jvm/java-1.8.0-openjdk-amd64 &> /dev/null
 
 #Following config would be required to control the heap size and set the debugging port:
 
@@ -28,7 +28,6 @@ else
    exit   
 fi
 
-sleep 5s
 
 # opening the page 
 if curl http://localhost:8080/ &>/dev/null
@@ -39,7 +38,6 @@ else
      sudo apt install curl
      curl http://localhost:8080/
 fi
-
 
 
 #Installing the Elasticsearch 
@@ -131,25 +129,20 @@ cqlsh -f $dir/dev-env-setup/cassandra/attendance.cql
 #Building Rabbitmq server
 #creating apt repos for installing rabbitmq 
 
-sudo apt-get install gnupg apt-transport-https -y
+sudo apt install software-properties-common -y
+wget -O- https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add -
 
-sudo curl -fsSL https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc | apt-key add -
+echo "deb https://packages.erlang-solutions.com/ubuntu focal contrib" | sudo tee /etc/apt/sources.list.d/rabbitmq.list
 
-tee /etc/apt/sources.list.d/bintray.rabbitmq.list << EOF
- # (Installs the latest Erlang 22.x release.)
- # Change component to "erlang-21.x" to install the latest 21.x version.
- # "bionic" as a distribution name should work for any later Ubuntu or Debian release.
- # See the release to distribution mapping table in RabbitMQ doc guides to learn more.
-deb https://dl.bintray.com/rabbitmq-erlang/debian bionic erlang
-deb https://dl.bintray.com/rabbitmq/debian bionic main
-EOF
+sudo apt update
+sudo apt install erlang -y
 
-#updating the apt repos 
-sudo apt-get update -y
+curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.deb.sh | sudo bash
 
-#installing the rabbit mq 
+sudo apt update
 
-sudo apt-get install rabbitmq-server -y --fix-missing
+sudo apt install rabbitmq-server -y
+
 
 #enabling the plugins in rabbit mq
 
@@ -163,11 +156,11 @@ sudo rabbitmqctl set_user_tags rabbitmq administrator
 
 sudo rabbitmqctl set_permissions -p / rabbitmq ".*" ".*" ".*"
 
-if sudo systemctl status rabbitmq &>/dev/null
+if sudo systemctl status rabbitmq-server &>/dev/null
 then
    echo "RabbitMQ running successfully"
 else
-   sudo systemctl status rabbitmq
+   sudo systemctl status rabbitmq-server
    exit   
 fi
 
@@ -179,7 +172,7 @@ sudo apt-get -y install --no-install-recommends  wget
 
 wget -O - https://openresty.org/package/pubkey.gpg | apt-key add -
 
-echo "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/openresty.list
+echo "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main" |sudo tee /etc/apt/sources.list.d/openresty.list
 
 sudo apt-get update
 
@@ -188,7 +181,9 @@ sudo apt-get update
 sudo apt-get -y install --no-install-recommends openresty
 
 # Copying the web configurations:
-sudo cp -a $dir/dev-env-setup/openresty/* /etc/openresty/
+
+#1 change here
+sudo cp -a /home/pranay/repo/dev-env-setup/openresty/* /etc/openresty/
 
 if sudo systemctl status openresty &>/dev/null
 then
@@ -212,27 +207,31 @@ fi
 #Bundling-up everything
 
 #cloning the common repo from bitbucket
-cd $dir/;git clone https://pranay1603@bitbucket.org/senpiper/common.git
+###changes done here in path added manually after testing delete and add variable $dir
+cd /home/pranay/repo/;git clone https://pranay1603@bitbucket.org/senpiper/common.git
 
 #building up the jar file 
-cd $dir/common/ ; mvn -T4C clean install 
+cd /home/pranay/repo/common/ ; mvn -T4C clean install 
 
 
 #now building the war file of core 
-cd $dir/core/ ; mvn -T4C clean install
+cd /home/pranay/repo/core/ ; mvn -T4C clean install
 
 #cloning the search repo from bitbicket
-cd $dir/ ; git clone https://pranay1603@bitbucket.org/senpiper/search.git
+cd /home/pranay/repo/ ; git clone https://pranay1603@bitbucket.org/senpiper/search.git
 
 #building the war file from search directory 
-cd $dir/search/search/ ; mvn -T4C clean install 
+cd /home/pranay/repo/search/search/ ; mvn -T4C clean install 
 
 #cloning the webclient repo from bitbucket
-cd $dir/ ; git clone https://pranay1603@bitbucket.org/senpiper/webclient.git; git checkout latestProdBuild
+cd /home/pranay/repo/ ;git clone https://pranay1603@bitbucket.org/senpiper/webclient.git
+
+##switching to the latestProdBuild branch in webclient
+cd /home/pranay/repo/webclient/;git checkout latestProdBuild
 
 #copying the core and search war file into tomcat webapps directory 
 
-sudo cp $dir/core/target/core.war /root/repo/search/search/target/search.war /var/lib/tomcat9/webapps/
+echo "pranay" |sudo -S cp /home/pranay/repo/core/target/core.war /home/pranay/repo/search/search/target/search.war /var/lib/tomcat9/webapps/
 
 #restarting the tomcat9 service 
 
@@ -242,15 +241,16 @@ then
 else
    sudo systemctl restart tomcat9
    exit   
+fi
 
 #Creating the directory for frontend & copying the webclient data to html directory
 if ls /usr/share/nginx/html/excel/ &>/dev/null
 then
-  sudo  cp -a $dir/webclient/* /usr/share/nginx/html/
+  sudo  cp -r /home/pranay/repo/webclient/* /usr/share/nginx/html/
 else   
     sudo mkdir -p /usr/share/nginx/html/excel/
-    sudo cp -a $dir/webclient/* /usr/share/nginx/html/
-
+    sudo cp -r /home/pranay/repo/webclient/* /usr/share/nginx/html/
+fi
 
 
 #installing mkcert
@@ -268,9 +268,9 @@ echo "$root" |sudo -S mkcert local.senpiper.com *.local.senpiper.com localhost 1
 echo "pranay" |sudo -S sed -i 's/\(^127.0.0.1.*\)/\1\tlocal.senpiper.com/g' /etc/hosts
 
 #copying the certificates into the openresty folder 
-sudo cp /home/$user/local.senpiper.com+4.pem /etc/openresty/ssl/fullchain.pem
+sudo cp ./local.senpiper.com+4.pem /etc/openresty/ssl/fullchain.pem
 
-sudo cp /home/$user/local.senpiper.com+4-key.pem /etc/openresty/ssl/privkey.pem
+sudo cp ./local.senpiper.com+4-key.pem /etc/openresty/ssl/privkey.pem
 
 #making the directory for log storing
 if ls /var/log/nginx/ &>/dev/null
@@ -278,21 +278,23 @@ then
    echo "directory exist /var/log/nginx/"
 else   
   sudo mkdir /var/log/nginx/
+fi
 
 #checking the configuration
 if openresty -t &>/dev/null
 then
    echo "configuration check successfully of openresty"
+   sudo systemctl restart openresty 
 else
-   openresty -t
-   exit   
+  sudo  openresty -t
+  sudo systemctl restart openresty 
+   exit 
+fi  
 
-#restarting the service 
-sudo systemctl restart openresty 
-
+COMMENT1
 
 ## creating the company file to add into cassandra db
-
+##changes done for testing in paths 
 read -p "Enter the company name : " company
 
 read -p "Enter the subdomain of company : " subdomain
@@ -301,17 +303,17 @@ read -p "Enter the mobile no of company : " mobile
 
 read -p "Enter the mail id of company : " mail
 
-cp $user/dev-env-setup/cassandra/queries $user/$company.txt
+cp /home/pranay/repo/dev-env-setup/cassandra/queries /home/pranay/repo/$company.txt
 
-sed -i "s/Pawan/$company/g" $dir/$company.txt
+sed -i "s/Pawan/$company/g" /home/pranay/repo/$company.txt
 
-sed -i "s/pawan@senpiper.com/$mail/g" $dir/$company.txt
+sed -i "s/pawan@senpiper.com/$mail/g" /home/pranay/repo/$company.txt
 
-sed -i "s/8808808800/$mobile/g" $dir/$company.txt
+sed -i "s/8808808800/$mobile/g" /home/pranay/repo/$company.txt
 
-sed -i  "s/[S,s]etup/$subdomain/g" $dir/$company.txt
+sed -i  "s/[S,s]etup/$subdomain/g" /home/pranay/repo/$company.txt
 
 #Creating entry into the cassandra db
 
-cqlsh -k core -f $dir/$company.txt
+cqlsh -k core -f /home/pranay/repo/$company.txt
 
