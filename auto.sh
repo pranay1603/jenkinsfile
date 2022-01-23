@@ -3,7 +3,11 @@
 #here we have created the script for non root user for setting up the environment
 
 ##taking the root password from the user
-read -p "Enter your root password : " root
+read -p "/nEnter your root password : " root
+
+##taking app password for cloning 
+
+read -p "/nEnter your app password for git cloning : " apppass
 
 ##Setting the tomcat9 server 
 
@@ -64,8 +68,7 @@ if curl -XGET http://localhost:9200 &>/dev/null
 then
    echo "Elasticsearch run successfully"
 else
-   curl -XGET http://localhost:9200
-   exit   
+   curl -XGET http://localhost:9200   
 fi   
 
 #Installing Git
@@ -78,9 +81,9 @@ read -p "Enter the name of directory with path u want to clone dev-env-setup rep
 
 if ls $dir &> /dev/null
 then
-   cd $dir;git clone https://pranay1603@bitbucket.org/senpiper/dev-env-setup.git
+   cd $dir;git clone https://pranay1603:$apppass@bitbucket.org/senpiper/dev-env-setup.git
 else
-   mkdir -p $dir;cd $dir;git clone https://pranay1603@bitbucket.org/senpiper/dev-env-setup.git
+   mkdir -p $dir;cd $dir;git clone https://pranay1603:$apppass@bitbucket.org/senpiper/dev-env-setup.git
 fi  	
 
 
@@ -118,7 +121,7 @@ fi
 
 
 # cloning the core repo from bitbucket
-cd $dir/ ;git clone https://pranay1603@bitbucket.org/senpiper/core.git
+cd $dir/ ;git clone https://pranay1603:$apppass@bitbucket.org/senpiper/core.git
 
 
 #creating the core keyspace in cassandra 
@@ -211,7 +214,7 @@ fi
 
 #cloning the common repo from bitbucket
 
-cd $dir;git clone https://pranay1603@bitbucket.org/senpiper/common.git
+cd $dir;git clone https://pranay1603:$apppass@bitbucket.org/senpiper/common.git
 
 #building up the jar file 
 cd $dir/common/ ; mvn -T4C clean install 
@@ -221,13 +224,13 @@ cd $dir/common/ ; mvn -T4C clean install
 cd $dir/core/ ; mvn -T4C clean install
 
 #cloning the search repo from bitbicket
-cd $dir ; git clone https://pranay1603@bitbucket.org/senpiper/search.git
+cd $dir ; git clone https://pranay1603:$apppass@bitbucket.org/senpiper/search.git
 
 #building the war file from search directory 
 cd $dir/search/search/ ; mvn -T4C clean install 
 
 #cloning the webclient repo from bitbucket
-cd $dir ;git clone https://pranay1603@bitbucket.org/senpiper/webclient.git
+cd $dir ;git clone https://pranay1603:$apppass@bitbucket.org/senpiper/webclient.git
 
 ##switching to the latestProdBuild branch in webclient
 cd $dir/webclient/;git checkout latestProdBuild
@@ -268,7 +271,7 @@ mkcert local.senpiper.com *.local.senpiper.com localhost 127.0.0.1 ::1
 
 #switching to repo user to do entry into the /etc/host file
 
-echo "$root" |sudo -S sed -i 's/\(^127.0.0.1.*\)/\1\tlocal.senpiper.com/g' /etc/hosts
+echo "$root" |sudo -S sed -i 's/\(^127.0.0.1.*\)/\1\tdevsetup.local.senpiper.com/g' /etc/hosts
 
 #copying the certificates into the openresty folder 
 sudo cp ./local.senpiper.com+4.pem /etc/openresty/ssl/fullchain.pem
@@ -289,9 +292,7 @@ then
    echo "configuration check successfully of openresty"
    sudo systemctl restart openresty 
 else
-  sudo  openresty -t
-  sudo systemctl restart openresty 
-   exit 
+  sudo  openresty -t 
 fi  
 
 
@@ -304,7 +305,7 @@ read -p "Enter the mobile no of company : " mobile
 
 read -p "Enter the mail id of company : " mail
 
-cp /home/pranay/repo/dev-env-setup/cassandra/queries $dir/$company.txt
+cp $dir/dev-env-setup/cassandra/queries $dir/$company.txt
 
 sed -i "s/Pawan/$company/g" $dir/$company.txt
 
